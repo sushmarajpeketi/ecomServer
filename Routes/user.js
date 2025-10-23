@@ -8,7 +8,7 @@ router.post('/sign-in',signIn)
 router.get('/user-info',auth,userInfo)
 router.get('/all-users',allUsers)
 router.get('/length',usersLength)
-router.get(`/dynamic-users/:page/:rows`,dynamicUsers)
+router.get(`/`,dynamicUsers)
 
 
 export default router;

@@ -15,6 +15,8 @@ let authenticate = (req, res, next) => {
       id: decoded.id,
       username: decoded.username,
       email: decoded.email,
+      
+     
     };
     next();
   } catch (error) {

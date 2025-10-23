@@ -7,10 +7,8 @@ import dotenv from 'dotenv'
 
 import userRouter from './Routes/user.js'
 
-
 let app = express()
 dotenv.config()
-
 
 app.use(express.json())
 app.use(cookieParser())
@@ -18,8 +16,6 @@ app.use(cookieParser())
 app.get('/',(req,res)=>{
     res.send('hi')
 })
-
-
 
 app.use(cors({
     origin: "http://localhost:5173", 

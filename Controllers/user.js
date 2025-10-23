@@ -1,6 +1,6 @@
 import User from "../Models/UserSchema.js";
 import jwt from "jsonwebtoken";
-import { email, z } from "zod";
+import { z } from "zod";
 
 let signUp = async (req, res) => {
   const signupSchema = z.object({
@@ -50,13 +50,13 @@ let signIn = async (req, res) => {
   const { email, password } = validation.data;
   try {
     let user = await User.findOne({ email, password });
-    console.log("user", user);
+    console.log("user from signin", user);
     if (!user) {
       console.log("user not found");
       return res.status(404).send({ error: "user not found!" });
     }
     let username = user.username;
-    const token = jwt.sign({ username, email }, process.env.SECRETKEY, {
+    const token = jwt.sign({id:user._id, username, email}, process.env.SECRETKEY, {
       expiresIn: "1hr",
     });
     res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 });
@@ -69,17 +69,15 @@ let signIn = async (req, res) => {
   }
 };
 const userInfo = async (req, res) => {
-  console.log("userInfo");
-  // try{
-  //   User.findOne({email})
-  // }
-  try {
-    res.status(200).send({
-      username: req.user.username,
-      email: req.user.email,
-    });
+ try {
+    const user = await User.findById(req.user.id).select("username email mobile role");
+    const userObj = user.toObject();
+    if (!userObj) {
+      return res.status(404).send({ error: "User not found" });
+    }
+    res.status(200).send({...userObj,id:userObj._id,_id:undefined});
   } catch (error) {
-    res.status(500).send({ error: "Failed to fetch user info" });
+    res.status(500).send({ error: error.message });
   }
 };
 
@@ -107,8 +105,7 @@ const allUsers = async (req, res) => {
 };
 
 const dynamicUsers = async (req,res) => {
-    let {page,rows} = req.params
-    console.log("page and rows", page,rows)
+    let {page,rows} = req.query
     page = parseInt(page);
     rows = parseInt(rows);
     const skip = (page)*rows;
