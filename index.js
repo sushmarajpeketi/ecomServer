@@ -6,10 +6,17 @@ import cors from "cors";
 import dotenv from 'dotenv'
 
 import userRouter from './Routes/user.js'
+import { v2 as cloudinary } from 'cloudinary'
+
+
 
 let app = express()
 dotenv.config()
-
+cloudinary.config({ 
+  cloud_name: process.env.CLOUD_NAME, 
+  api_key: process.env.CLOUDINARY_API_KEY, 
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 app.use(express.json())
 app.use(cookieParser())
 

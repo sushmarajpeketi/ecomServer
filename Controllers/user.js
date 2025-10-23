@@ -1,15 +1,16 @@
 import User from "../Models/UserSchema.js";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { v2 as cloudinary } from "cloudinary";
 
 let signUp = async (req, res) => {
   const signupSchema = z.object({
     username: z.string().min(3, "Name must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     password: z.string().min(4, "Password must be at least 4 characters"),
-    mobile:z.coerce.number().int().max(9999999999).min(100000000)
+    mobile: z.coerce.number().int().max(9999999999).min(100000000),
   });
-  
+
   const validation = signupSchema.safeParse(req.body);
   if (!validation.success) {
     console.log(validation);
@@ -56,9 +57,13 @@ let signIn = async (req, res) => {
       return res.status(404).send({ error: "user not found!" });
     }
     let username = user.username;
-    const token = jwt.sign({id:user._id, username, email}, process.env.SECRETKEY, {
-      expiresIn: "1hr",
-    });
+    const token = jwt.sign(
+      { id: user._id, username, email },
+      process.env.SECRETKEY,
+      {
+        expiresIn: "1hr",
+      }
+    );
     res.cookie("token", token, { httpOnly: true, maxAge: 60 * 60 * 1000 });
     console.log("cookie was sent to user!");
     return res
@@ -69,13 +74,15 @@ let signIn = async (req, res) => {
   }
 };
 const userInfo = async (req, res) => {
- try {
-    const user = await User.findById(req.user.id).select("username email mobile role");
+  try {
+    const user = await User.findById(req.user.id).select(
+      "username email mobile role"
+    );
     const userObj = user.toObject();
     if (!userObj) {
       return res.status(404).send({ error: "User not found" });
     }
-    res.status(200).send({...userObj,id:userObj._id,_id:undefined});
+    res.status(200).send({ ...userObj, id: userObj._id, _id: undefined });
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
@@ -84,19 +91,19 @@ const userInfo = async (req, res) => {
 const allUsers = async (req, res) => {
   console.log("all users API");
 
-  const allUsers = User.aggregate([
+  User.aggregate([
     {
       $project: {
         id: "$_id",
         _id: 0,
-        email:1,
-        username:1,
-        mobile:1
-      }
+        email: 1,
+        username: 1,
+        mobile: 1,
+      },
     },
   ])
     .then((data) => {
-      return res.status(200).json(data );
+      return res.status(200).json(data);
     })
     .catch((e) => {
       console.log(e.message);
@@ -104,19 +111,43 @@ const allUsers = async (req, res) => {
     });
 };
 
-const dynamicUsers = async (req,res) => {
-    let {page,rows} = req.query
-    page = parseInt(page);
-    rows = parseInt(rows);
-    const skip = (page)*rows;
-    const sortedUsers = await User.find().sort({_id:1}).skip(skip).limit(rows)
-    res.json(sortedUsers)
+const dynamicUsers = async (req, res) => {
+  let { page, rows } = req.query;
+  console.log("page and rows", page ," ", rows)
+  page = parseInt(page);
+  rows = parseInt(rows);
+  const skip = page * rows;
+  const sortedUsers = await User.find().sort({ _id: 1 }).skip(skip).limit(rows);
+  res.status(200).json(sortedUsers);
+};
 
-}
+const usersLength = async (req, res) => {
+  let length = await User.countDocuments();
+  return res.status(200).json(length);
+};
 
-const usersLength = async(req,res) =>{
-  let length = await User.countDocuments()
-  return res.status(200).json(length)
-}
+const avtarUpload = async (req, res) => {
+  console.log("$$$$$$$$$$$$$$$$$$$$$$", req.file);
 
-export { signUp, signIn, userInfo, allUsers,dynamicUsers,usersLength };
+  
+    try{
+      let Cloudimg = await cloudinary.uploader.upload(req.file.path) 
+      let resp = await User.updateOne({_id:req.user.id},{$set:{ img: Cloudimg.secure_url }})
+      console.log("after uploading the pic",resp)
+      res.status(200).json({message:"image updated successfully"})
+    }catch(e){
+      console.log("error message from cloudinary",e.message)
+      res.status(400).json({error:e.message})
+    };
+ 
+
+  }
+export {
+  signUp,
+  signIn,
+  userInfo,
+  allUsers,
+  dynamicUsers,
+  usersLength,
+  avtarUpload,
+};
