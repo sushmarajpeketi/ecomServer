@@ -1,7 +1,6 @@
 import User from "../Models/UserSchema.js";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
-import { v2 as cloudinary } from "cloudinary";
 
 let signUp = async (req, res) => {
   const signupSchema = z.object({
@@ -113,7 +112,7 @@ const allUsers = async (req, res) => {
 
 const dynamicUsers = async (req, res) => {
   let { page, rows } = req.query;
-  console.log("page and rows", page ," ", rows)
+  console.log("page and rows", page, " ", rows);
   page = parseInt(page);
   rows = parseInt(rows);
   const skip = page * rows;
@@ -127,21 +126,24 @@ const usersLength = async (req, res) => {
 };
 
 const avtarUpload = async (req, res) => {
-  console.log("$$$$$$$$$$$$$$$$$$$$$$", req.file);
+  console.log("in avtarUpoad");
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-  
-    try{
-      let Cloudimg = await cloudinary.uploader.upload(req.file.path) 
-      let resp = await User.updateOne({_id:req.user.id},{$set:{ img: Cloudimg.secure_url }})
-      console.log("after uploading the pic",resp)
-      res.status(200).json({message:"image updated successfully"})
-    }catch(e){
-      console.log("error message from cloudinary",e.message)
-      res.status(400).json({error:e.message})
-    };
- 
+    const imgUrl = req.file.path;
 
+    await User.updateOne({ _id: req.user.id }, { $set: { img: imgUrl } });
+
+    res
+      .status(200)
+      .json({ message: "Image uploaded successfully", url: imgUrl });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
+};
+
 export {
   signUp,
   signIn,

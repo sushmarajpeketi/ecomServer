@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 let authenticate = (req, res, next) => {
   console.log("auth check middleware");
   const token = req.cookies.token;
-
+  
   if (!token) {
     return res
       .status(401)
@@ -15,8 +15,6 @@ let authenticate = (req, res, next) => {
       id: decoded.id,
       username: decoded.username,
       email: decoded.email,
-      
-     
     };
     next();
   } catch (error) {
