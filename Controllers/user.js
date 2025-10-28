@@ -75,14 +75,20 @@ let signIn = async (req, res) => {
 const userInfo = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select(
-      "username email mobile role"
+      "username email mobile role img"
     );
     const userObj = user.toObject();
     if (!userObj) {
-      return res.status(404).send({ error: "User not found" });
+      return res.status(401).send({ error: "User not found" });
     }
     res.status(200).send({ ...userObj, id: userObj._id, _id: undefined });
   } catch (error) {
+    // if (error.response?.status === 401) {
+    //   // Token expired or no token: this is normal, not an error
+    //   console.log("No valid user session.");
+    //   setUser({ username: "", email: "", role: "", id: "", mobile: "" });
+    //   return;
+    // }
     res.status(500).send({ error: error.message });
   }
 };
@@ -111,7 +117,7 @@ const allUsers = async (req, res) => {
 };
 
 const dynamicUsers = async (req, res) => {
-  let { page, rows } = req.query;
+  let { page, rows, username, email, mobile  } = req.query;
   console.log("page and rows", page, " ", rows);
   page = parseInt(page);
   rows = parseInt(rows);
@@ -126,7 +132,6 @@ const usersLength = async (req, res) => {
 };
 
 const avtarUpload = async (req, res) => {
-  console.log("in avtarUpoad");
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -144,6 +149,14 @@ const avtarUpload = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  try {
+    res.clearCookie("token", {httpOnly: true});
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
+};
 export {
   signUp,
   signIn,
@@ -152,4 +165,5 @@ export {
   dynamicUsers,
   usersLength,
   avtarUpload,
+  logout,
 };
