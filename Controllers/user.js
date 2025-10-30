@@ -1,6 +1,6 @@
 import User from "../Models/UserSchema.js";
 import jwt from "jsonwebtoken";
-import { z } from "zod";
+import {  z } from "zod";
 
 let signUp = async (req, res) => {
   const signupSchema = z.object({
@@ -83,12 +83,7 @@ const userInfo = async (req, res) => {
     }
     res.status(200).send({ ...userObj, id: userObj._id, _id: undefined });
   } catch (error) {
-    // if (error.response?.status === 401) {
-    //   // Token expired or no token: this is normal, not an error
-    //   console.log("No valid user session.");
-    //   setUser({ username: "", email: "", role: "", id: "", mobile: "" });
-    //   return;
-    // }
+    
     res.status(500).send({ error: error.message });
   }
 };
@@ -117,13 +112,35 @@ const allUsers = async (req, res) => {
 };
 
 const dynamicUsers = async (req, res) => {
-  let { page, rows, username, email, mobile  } = req.query;
-  console.log("page and rows", page, " ", rows);
+  let { page, rows, username, email,length } = req.query;
+  console.log("hey");
+  let queryObj = {};
+  if (username) {
+    console.log("username", username);
+    queryObj["username"] = { $regex: username, $options: "i" };
+  }
+  if (email) {
+    queryObj["email"] =  { $regex: email, $options: "i" } ;
+  }
+  // if (mobile) {
+  //   mobile = bigint(mobile);
+  //   queryObj["mobile"] = { $contains: { $regex: mobile, $options: "i" } };
+  // }
+  console.log("queryObj is", queryObj);
+
+  console.log("page and rows and username and email",page," ",rows," ",username," ",email);
   page = parseInt(page);
   rows = parseInt(rows);
   const skip = page * rows;
-  const sortedUsers = await User.find().sort({ _id: 1 }).skip(skip).limit(rows);
-  res.status(200).json(sortedUsers);
+  let count = 0;
+  if(length){
+    count = await User.find(queryObj).countDocuments()
+  }
+  const sortedUsers = await User.find(queryObj)
+    .sort({ _id: 1 })
+    .skip(skip)
+    .limit(rows);
+  res.status(200).json({users:sortedUsers,count});
 };
 
 const usersLength = async (req, res) => {
@@ -151,7 +168,7 @@ const avtarUpload = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    res.clearCookie("token", {httpOnly: true});
+    res.clearCookie("token", { httpOnly: true });
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (e) {
     return res.status(400).json({ error: e.message });

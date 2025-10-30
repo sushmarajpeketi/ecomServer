@@ -13,9 +13,10 @@ router.post('/sign-in',signIn)
 router.get('/user-info',auth,userInfo)
 router.get('/all-users',allUsers)
 router.get('/length',usersLength)
-router.get('/', auth,dynamicUsers)
+router.get('/',dynamicUsers)
 router.get('/logout',auth,logout)
 router.post('/upload-avatar', auth, upload.single('avatar'), avtarUpload);
+
 
 
 
