@@ -1,5 +1,5 @@
 import express from 'express'
-import { signUp,signIn,userInfo,allUsers,dynamicUsers,usersLength,avtarUpload,logout } from '../Controllers/user.js'
+import { signUp,signIn,userInfo,allUsers,dynamicUsers,usersLength,avtarUpload,logout,editUser,deleteUser } from '../Controllers/user.js'
 import auth from '../middlewares/user.js'
 
 
@@ -15,6 +15,8 @@ router.get('/all-users',allUsers)
 router.get('/length',usersLength)
 router.get('/',dynamicUsers)
 router.get('/logout',auth,logout)
+router.put('/:id',editUser)
+router.delete('/:id',deleteUser)
 router.post('/upload-avatar', auth, upload.single('avatar'), avtarUpload);
 
 

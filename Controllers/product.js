@@ -1,6 +1,9 @@
 import { ZodError } from "zod";
 import Product from "../Models/ProductSchema.js";
 import { productValidationSchema } from "../validations/product.js";
+import dayjs from 'dayjs' 
+dayjs().format()
+
 
 export const createProduct = async (req, res) => {
   try {
@@ -43,21 +46,27 @@ export const createProduct = async (req, res) => {
 
 export const getProducts = async (req, res) => {
   try {
-    let { page, rows, name, category, fetchTotal } = req.query;
+    let { page, rows, name, category, fetchTotal,createdAt } = req.query;
 
     page = parseInt(page);
     rows = parseInt(rows);
-    // console.log(page + " " + category + " " + name);
+    console.log(createdAt);
     const query = {};
     if (name) query.name = { $regex: name, $options: "i" };
     if (category) query.category = { $regex: category, $options: "i" };
+    if(createdAt) {
+        const start = dayjs(createdAt).startOf("day").toDate()
+        const end = dayjs(createdAt).endOf("day").toDate()
+
+        query.createdAt = { $gte: start, $lte: end };
+    }
 
     const products = await Product.find(query, { __v: 0 })
       .skip(page * rows)
       .limit(rows)
       .lean();
     let total = 0;
-    // console.log(fetchTotal, "fetch");
+    console.log(products.data, products);
     if (fetchTotal) {
       total = await Product.countDocuments(query);
     }
@@ -72,6 +81,7 @@ export const getProducts = async (req, res) => {
       data: products,
     });
   } catch (e) {
+    console.log("error",e.error)
     return res.status(500).json({
       success: false,
       message: e.message || "Server error",

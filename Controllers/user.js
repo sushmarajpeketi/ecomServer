@@ -174,6 +174,16 @@ const logout = async (req, res) => {
     return res.status(400).json({ error: e.message });
   }
 };
+
+
+const editUser = async (req,res)=>{
+  
+}
+
+const deleteUser = async (req,res)=>{
+
+}
+
 export {
   signUp,
   signIn,
@@ -183,4 +193,6 @@ export {
   usersLength,
   avtarUpload,
   logout,
+  editUser,
+  deleteUser
 };
